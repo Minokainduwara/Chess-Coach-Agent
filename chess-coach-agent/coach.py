@@ -1,36 +1,47 @@
-import os
-from dotenv import load_dotenv # type: ignore
-from mistralai import Mistral # type: ignore
-
-load_dotenv()
-
-# ✅ correct client initialization for v2.x
-client = Mistral(api_key=os.getenv("MISTRAL_API_KEY"))
+import requests # type: ignore
 
 
-def explain_position(data):
+class ChessCoach:
 
-    prompt = f"""
-You are a chess coach.
+    def __init__(self, model="llama3.2:latest"):
+        self.model = model
+        self.url = "http://localhost:11434/api/generate"
+
+    def explain(self, data):
+
+        prompt = f"""
+You are a professional chess coach.
+
+Analyze this position:
 
 FEN:
 {data["fen"]}
 
-Stockfish Evaluation:
-- Score: {data["score"]}
-- Best Move: {data["best_move"]}
+Engine Output:
+- Best Move: {data["best_move_san"]}
+- Evaluation: {data["evaluation"]}
+- Position Type: {data["classification"]}
+- Top Moves: {data["top_moves"]}
 
-Explain:
+Explain clearly:
 1. What is happening
 2. Why best move is correct
-3. Simple explanation for 1500 player
+3. What mistake level means
+4. Simple improvement advice
 """
 
-    response = client.chat.complete(
-        model="mistral-small-latest",
-        messages=[
-            {"role": "user", "content": prompt}
-        ]
-    )
+        try:
+            res = requests.post(
+                self.url,
+                json={
+                    "model": self.model,
+                    "prompt": prompt,
+                    "stream": False
+                },
+                timeout=60
+            )
 
-    return response.choices[0].message.content
+            return res.json().get("response", "⚠ No AI response")
+
+        except Exception as e:
+            return f"❌ AI Error: {str(e)}"
