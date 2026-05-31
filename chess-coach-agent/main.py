@@ -1,39 +1,48 @@
 from engine import analyze_fen, close_engine
-from coach import explain_position
+from coach import ChessCoach
 
 
 def run_cli():
 
-    print("\n♟ AI Chess FEN Analyzer")
+    print("\n♟ Chess Engine V2 (AI Coach + Stockfish)")
     print("Type 'exit' to quit\n")
 
-    while True:
+    engine_data = None
+    coach = ChessCoach()
 
-        fen = input("Enter FEN: ")
+    try:
+        while True:
 
-        if fen.lower() == "exit":
-            break
+            fen = input("Enter FEN: ").strip()
 
-        try:
+            if fen.lower() == "exit":
+                break
+
+            if not fen:
+                print("⚠ Empty FEN")
+                continue
+
             print("\n🔍 Analyzing...\n")
 
-            data = analyze_fen(fen)
+            engine_data = analyze_fen(fen)
 
             print("📊 Stockfish Result:")
-            print("Best Move:", data["best_move"])
-            print("Evaluation:", data["score"])
+            print("Best Move:", engine_data["best_move_san"])
+            print("Evaluation:", engine_data["evaluation"])
+            print("Type:", engine_data["classification"])
+            print("Top Moves:", engine_data["top_moves"])
 
-            print("\n🤖 AI Explanation:\n")
+            print("\n🤖 AI Coach:\n")
+            print(coach.explain(engine_data))
 
-            explanation = explain_position(data)
+            print("\n" + "-" * 60 + "\n")
 
-            print(explanation)
-            print("\n" + "-"*50 + "\n")
+    except KeyboardInterrupt:
+        print("\n⚠ Interrupted")
 
-        except Exception as e:
-            print("Error:", e)
-
-    close_engine()
+    finally:
+        close_engine()
+        print("\n👋 Engine closed safely")
 
 
 if __name__ == "__main__":
